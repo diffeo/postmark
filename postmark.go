@@ -35,6 +35,17 @@ type postmark struct {
 	client       *http.Client
 }
 
+// Request is an general container for requests sent with Postmark
+type Request struct {
+	Method  string
+	Path    string
+	Payload interface{}
+	Target  interface{}
+
+	// Set this to true in order to use the account-wide API token
+	AccountAuth bool
+}
+
 // New returns an initialized Postmark client
 func New(serverToken, accountToken string) Postmark {
 	return &postmark{
@@ -43,35 +54,39 @@ func New(serverToken, accountToken string) Postmark {
 	}
 }
 
-func (p *postmark) exec(ctx context.Context, r *http.Request) error {
+func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, error) {
+	data, err := json.Marshal(req.Payload)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := http.NewRequest(req.Method, pmRootEndpoint+req.Path, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
 	r.Header.Set("Accept", "application/json")
 	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("X-Postmark-Server-Token", p.serverToken)
+
+	if req.AccountAuth {
+		r.Header.Set("X-Postmark-Account-Token", p.accountToken)
+	} else {
+		r.Header.Set("X-Postmark-Server-Token", p.serverToken)
+	}
 
 	resp, err := p.httpclient().Do(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var er EmailResponse
-	er.StatusCode = resp.StatusCode
-
-	if err := json.NewDecoder(resp.Body).Decode(&er); err != nil {
-		return err
-	}
-
-	if resp.StatusCode/100 != 2 {
-		if er.IsError() {
-			return &er
+	if req.Target != nil {
+		if err := json.NewDecoder(resp.Body).Decode(req.Target); err != nil {
+			return nil, err
 		}
-		return fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
 	}
 
-	if er.IsError() {
-		return &er
-	}
-	return nil
+	return resp, nil
 }
 
 func (p *postmark) httpclient() *http.Client {
@@ -148,17 +163,31 @@ type Email struct {
 }
 
 func (p *postmark) Email(ctx context.Context, email *Email) error {
-	data, err := json.Marshal(email)
+	er := new(EmailResponse)
+	resp, err := p.Exec(ctx, &Request{
+		Method:  "POST",
+		Path:    "/email",
+		Payload: email,
+		Target:  er,
+	})
 	if err != nil {
 		return err
 	}
 
-	r, err := http.NewRequest("POST", pmRootEndpoint+"/email", bytes.NewReader(data))
-	if err != nil {
-		return err
+	er.StatusCode = resp.StatusCode
+
+	if resp.StatusCode/100 != 2 {
+		if er.IsError() {
+			return er
+		}
+		return fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
 	}
 
-	return p.exec(ctx, r)
+	if er.IsError() {
+		return er
+	}
+
+	return nil
 }
 
 // EmailWithTemplate defines a templated email to the postmark API
@@ -171,15 +200,29 @@ type EmailWithTemplate struct {
 }
 
 func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) error {
-	data, err := json.Marshal(email)
+	er := new(EmailResponse)
+	resp, err := p.Exec(ctx, &Request{
+		Method:  "POST",
+		Path:    "/email/withTemplate/",
+		Payload: email,
+		Target:  er,
+	})
 	if err != nil {
 		return err
 	}
 
-	r, err := http.NewRequest("POST", pmRootEndpoint+"/email/withTemplate/", bytes.NewReader(data))
-	if err != nil {
-		return err
+	er.StatusCode = resp.StatusCode
+
+	if resp.StatusCode/100 != 2 {
+		if er.IsError() {
+			return er
+		}
+		return fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
 	}
 
-	return p.exec(ctx, r)
+	if er.IsError() {
+		return er
+	}
+
+	return nil
 }
