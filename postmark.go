@@ -7,7 +7,6 @@ import (
 	"golang.org/x/net/context"
 	"io"
 	"net/http"
-	"time"
 )
 
 const (
@@ -24,13 +23,8 @@ type Postmark interface {
 	// Templates returns a resource root object handling template interactions with Postmark
 	Templates() Templates
 
-	// Email sends a single email with custom content.
-	// http://developer.postmarkapp.com/developer-api-email.html#send-email
-	Email(ctx context.Context, email *Email) (*EmailResponse, error)
-
-	// EmailWithTemplate sends an email with templated content.
-	// http://developer.postmarkapp.com/developer-api-templates.html#email-with-template
-	EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error)
+	// Templates returns a resource root object handling template interactions with Postmark
+	Emails() Emails
 }
 
 type postmark struct {
@@ -56,6 +50,14 @@ func New(serverToken, accountToken string) Postmark {
 		serverToken:  serverToken,
 		accountToken: accountToken,
 	}
+}
+
+func (p *postmark) Templates() Templates {
+	return &templates{pm: p}
+}
+
+func (p *postmark) Emails() Emails {
+	return &emails{pm: p}
 }
 
 func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, error) {
@@ -122,10 +124,6 @@ func (p *postmark) SetClient(client *http.Client) Postmark {
 	return p
 }
 
-func (p *postmark) Templates() Templates {
-	return &templates{pm: p}
-}
-
 // Error defines an error from the Postmark API
 type Error struct {
 	ErrorCode int
@@ -146,86 +144,4 @@ func (e *Error) Error() string {
 		codeMeaning = meaning
 	}
 	return fmt.Sprintf("postmark error %d %s: %s", e.ErrorCode, e.Message, codeMeaning)
-}
-
-// BaseEmail defines the fields common to all Postmark emails
-type BaseEmail struct {
-	From        string       `json:",omitempty"`
-	To          string       `json:",omitempty"`
-	Cc          string       `json:",omitempty"`
-	Bcc         string       `json:",omitempty"`
-	Tag         string       `json:",omitempty"`
-	ReplyTo     string       `json:",omitempty"`
-	Headers     []Header     `json:",omitempty"`
-	TrackOpens  bool         `json:",omitempty"`
-	Attachments []Attachment `json:",omitempty"`
-}
-
-// Header defines an email header within the Postmark API
-type Header struct {
-	Name  string
-	Value string
-}
-
-// Attachment defines an email attachment within the Postmark API
-type Attachment struct {
-	Name        string
-	Content     string
-	ContentType string
-}
-
-// EmailResponse is the response from the postmark API after an email is sent.
-// This can also be an error type for unsuccesful calls.
-type EmailResponse struct {
-	To          string
-	SubmittedAt time.Time
-	MessageID   string
-	ErrorCode   int
-	Message     string
-}
-
-// Email defines an email object within the Postmark API
-type Email struct {
-	BaseEmail
-
-	Subject  string
-	HTMLBody string `json:"HtmlBody"`
-	TextBody string
-}
-
-func (p *postmark) Email(ctx context.Context, email *Email) (*EmailResponse, error) {
-	er := new(EmailResponse)
-	_, err := p.Exec(ctx, &Request{
-		Method:  "POST",
-		Path:    "/email",
-		Payload: email,
-		Target:  er,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return er, nil
-}
-
-// EmailWithTemplate defines a templated email to the postmark API
-type EmailWithTemplate struct {
-	BaseEmail
-
-	TemplateID    string `json:"TemplateId"`
-	TemplateModel map[string]interface{}
-	InlineCSS     bool `json:"InlineCss,omitempty"`
-}
-
-func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error) {
-	er := new(EmailResponse)
-	_, err := p.Exec(ctx, &Request{
-		Method:  "POST",
-		Path:    "/email/withTemplate/",
-		Payload: email,
-		Target:  er,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return er, nil
 }
