@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 	"io"
 	"net/http"
+	"path"
 )
 
 const (
@@ -71,7 +72,7 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 		payload = bytes.NewReader(data)
 	}
 
-	r, err := http.NewRequest(req.Method, rootEndpoint+req.Path, payload)
+	r, err := http.NewRequest(req.Method, path.Join(rootEndpoint, req.Path), payload)
 	if err != nil {
 		return nil, err
 	}

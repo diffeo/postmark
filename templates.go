@@ -3,6 +3,7 @@ package postmark
 import (
 	"golang.org/x/net/context"
 	"net/url"
+	"path"
 	"strconv"
 )
 
@@ -54,7 +55,7 @@ func (t *templates) Get(ctx context.Context, id string) (*Template, error) {
 	tmpl := new(Template)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "GET",
-		Path:   "/templates/" + id,
+		Path:   path.Join("/templates/", id),
 		Target: tmpl,
 	})
 	if err != nil {
@@ -91,7 +92,7 @@ func (t *templates) Edit(ctx context.Context, id string, tmpl *Template) (*Templ
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method:  "PUT",
-		Path:    "/templates/" + id,
+		Path:    path.Join("/templates", id),
 		Payload: tmpl,
 		Target:  tmplResp,
 	})
@@ -132,7 +133,7 @@ func (t *templates) Delete(ctx context.Context, id string) (*TemplateResp, error
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "DELETE",
-		Path:   "/templates/" + id,
+		Path:   path.Join("/templates", id),
 		Target: tmplResp,
 	})
 	if err != nil {
