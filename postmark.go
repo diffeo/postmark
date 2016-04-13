@@ -80,6 +80,18 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 	}
 	defer resp.Body.Close()
 
+	// for unsuccessful http status codes, unmarshal an error
+	if resp.StatusCode/100 != 2 {
+		pmerr := &Error{StatusCode: resp.StatusCode}
+		if err := json.NewDecoder(resp.Body).Decode(pmerr); err != nil {
+			return resp, err
+		}
+		if pmerr.IsError() {
+			return resp, pmerr
+		}
+		return resp, fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
+	}
+
 	if req.Target != nil {
 		if err := json.NewDecoder(resp.Body).Decode(req.Target); err != nil {
 			return nil, err
@@ -99,6 +111,28 @@ func (p *postmark) httpclient() *http.Client {
 func (p *postmark) SetClient(client *http.Client) Postmark {
 	p.client = client
 	return p
+}
+
+// Error defines an error from the Postmark API
+type Error struct {
+	ErrorCode int
+	Message   string
+
+	// the HTTP status code of the response itself
+	StatusCode int `json:"-"`
+}
+
+// IsError returns whether or not the response indicated an error
+func (e *Error) IsError() bool {
+	return e.ErrorCode != 0
+}
+
+func (e *Error) Error() string {
+	codeMeaning := "unknown"
+	if meaning, ok := ErrorLookup[e.ErrorCode]; ok {
+		codeMeaning = meaning
+	}
+	return fmt.Sprintf("postmark error %d %s: %s", e.ErrorCode, e.Message, codeMeaning)
 }
 
 // BaseEmail defines the fields common to all Postmark emails
@@ -135,22 +169,6 @@ type EmailResponse struct {
 	MessageID   string
 	ErrorCode   int
 	Message     string
-
-	// the HTTP status code of the response itself
-	StatusCode int `json:"-"`
-}
-
-// IsError returns whether or not the response indicated an error
-func (e *EmailResponse) IsError() bool {
-	return e.ErrorCode != 0
-}
-
-func (e *EmailResponse) Error() string {
-	codeMeaning := "unknown"
-	if meaning, ok := ErrorLookup[e.ErrorCode]; ok {
-		codeMeaning = meaning
-	}
-	return fmt.Sprintf("postmark error %d %s: %s", e.ErrorCode, e.Message, codeMeaning)
 }
 
 // Email defines an email object within the Postmark API
@@ -164,7 +182,7 @@ type Email struct {
 
 func (p *postmark) Email(ctx context.Context, email *Email) error {
 	er := new(EmailResponse)
-	resp, err := p.Exec(ctx, &Request{
+	_, err := p.Exec(ctx, &Request{
 		Method:  "POST",
 		Path:    "/email",
 		Payload: email,
@@ -173,20 +191,6 @@ func (p *postmark) Email(ctx context.Context, email *Email) error {
 	if err != nil {
 		return err
 	}
-
-	er.StatusCode = resp.StatusCode
-
-	if resp.StatusCode/100 != 2 {
-		if er.IsError() {
-			return er
-		}
-		return fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
-	}
-
-	if er.IsError() {
-		return er
-	}
-
 	return nil
 }
 
@@ -201,7 +205,7 @@ type EmailWithTemplate struct {
 
 func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) error {
 	er := new(EmailResponse)
-	resp, err := p.Exec(ctx, &Request{
+	_, err := p.Exec(ctx, &Request{
 		Method:  "POST",
 		Path:    "/email/withTemplate/",
 		Payload: email,
@@ -210,19 +214,5 @@ func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTempla
 	if err != nil {
 		return err
 	}
-
-	er.StatusCode = resp.StatusCode
-
-	if resp.StatusCode/100 != 2 {
-		if er.IsError() {
-			return er
-		}
-		return fmt.Errorf("postmark call errored with status: %d", resp.StatusCode)
-	}
-
-	if er.IsError() {
-		return er
-	}
-
 	return nil
 }
