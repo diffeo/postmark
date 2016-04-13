@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
+	"net/url"
 
 	"golang.org/x/net/context"
 )
 
 const (
-	rootEndpoint = "https://api.postmarkapp.com"
+	apiHost = "api.postmarkapp.com"
 
 	serverTokenHeader  = "X-Postmark-Server-Token"
 	accountTokenHeader = "X-Postmark-Account-Token"
@@ -32,13 +32,18 @@ type Postmark interface {
 type postmark struct {
 	serverToken  string
 	accountToken string
-	client       *http.Client
+
+	scheme string
+	host   string
+
+	client *http.Client
 }
 
 // Request is an general container for requests sent with Postmark
 type Request struct {
 	Method  string
 	Path    string
+	Params  url.Values
 	Payload interface{}
 	Target  interface{}
 
@@ -51,6 +56,8 @@ func New(serverToken, accountToken string) Postmark {
 	return &postmark{
 		serverToken:  serverToken,
 		accountToken: accountToken,
+		scheme:       "https",
+		host:         apiHost,
 	}
 }
 
@@ -73,7 +80,14 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 		payload = bytes.NewReader(data)
 	}
 
-	r, err := http.NewRequest(req.Method, path.Join(rootEndpoint, req.Path), payload)
+	urlBuilder := url.URL{
+		Scheme:   p.scheme,
+		Host:     p.host,
+		Path:     req.Path,
+		RawQuery: req.Params.Encode(), // returns "" if nil
+	}
+
+	r, err := http.NewRequest(req.Method, urlBuilder.String(), payload)
 	if err != nil {
 		return nil, err
 	}
