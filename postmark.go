@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"golang.org/x/net/context"
 )
@@ -110,6 +113,16 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 	// for unsuccessful http status codes, unmarshal an error
 	if resp.StatusCode/100 != 2 {
 		pmerr := &Error{StatusCode: resp.StatusCode}
+
+		// handle non-json responses
+		if !strings.Contains(resp.Header.Get("Content-Type"), "application/json") {
+			log.Printf("req: %+v", r)
+
+			respData, _ := ioutil.ReadAll(resp.Body)
+			pmerr.Message = string(respData)
+			return resp, pmerr
+		}
+
 		if err := json.NewDecoder(resp.Body).Decode(pmerr); err != nil {
 			return resp, err
 		}
@@ -155,6 +168,10 @@ func (e *Error) IsError() bool {
 }
 
 func (e *Error) Error() string {
+	if e.ErrorCode == 0 {
+		return fmt.Sprintf("postmark HTTP error %d: %s", e.StatusCode, e.Message)
+	}
+
 	codeMeaning := "unknown"
 	if meaning, ok := ErrorLookup[e.ErrorCode]; ok {
 		codeMeaning = meaning

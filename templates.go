@@ -115,18 +115,14 @@ type TemplateList struct {
 }
 
 func (t *templates) List(ctx context.Context, count, offset int) (*TemplateList, error) {
-	urlBuilder := url.URL{
-		Path: "templates",
-		RawQuery: url.Values{
-			"count":  {strconv.Itoa(count)},
-			"offset": {strconv.Itoa(offset)},
-		}.Encode(),
-	}
-
 	tmplList := new(TemplateList)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "GET",
-		Path:   urlBuilder.String(),
+		Path:   "templates",
+		Params: url.Values{
+			"count":  {strconv.Itoa(count)},
+			"offset": {strconv.Itoa(offset)},
+		},
 		Target: tmplList,
 	})
 	if err != nil {
