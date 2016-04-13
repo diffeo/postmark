@@ -32,6 +32,11 @@ type Templates interface {
 	// Validate allows a template's validity to be checked without sending the template
 	// http://developer.postmarkapp.com/developer-api-templates.html#validate-template
 	Validate(ctx context.Context, tmpl *TemplateValidation) (*TemplateValidationResp, error)
+
+	// Email sends an email with the given template. This is a wrapper around the `EmailWithTemplate`
+	// method that lives on the `Emails` resource, but lives here in order to match the Postmark docs.
+	// http://developer.postmarkapp.com/developer-api-templates.html#email-with-template
+	Email(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error)
 }
 
 type templates struct {
@@ -179,4 +184,8 @@ func (t *templates) Validate(ctx context.Context, tmpl *TemplateValidation) (*Te
 		return nil, err
 	}
 	return tmplResp, nil
+}
+
+func (t *templates) Email(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error) {
+	return t.pm.Emails().EmailWithTemplate(ctx, email)
 }
