@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	pmRootEndpoint = "https://api.postmarkapp.com"
+	rootEndpoint = "https://api.postmarkapp.com"
 
-	pmServerTokenHeader  = "X-Postmark-Server-Token"
-	pmAccountTokenHeader = "X-Postmark-Account-Token"
+	serverTokenHeader  = "X-Postmark-Server-Token"
+	accountTokenHeader = "X-Postmark-Account-Token"
 )
 
 // Postmark defines methods to interace with the Postmark API
@@ -71,7 +71,7 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 		payload = bytes.NewReader(data)
 	}
 
-	r, err := http.NewRequest(req.Method, pmRootEndpoint+req.Path, payload)
+	r, err := http.NewRequest(req.Method, rootEndpoint+req.Path, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -80,9 +80,9 @@ func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, erro
 	r.Header.Set("Content-Type", "application/json")
 
 	if req.AccountAuth {
-		r.Header.Set("X-Postmark-Account-Token", p.accountToken)
+		r.Header.Set(accountTokenHeader, p.accountToken)
 	} else {
-		r.Header.Set("X-Postmark-Server-Token", p.serverToken)
+		r.Header.Set(serverTokenHeader, p.serverToken)
 	}
 
 	resp, err := p.httpclient().Do(r)
