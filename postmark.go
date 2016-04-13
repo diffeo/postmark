@@ -22,11 +22,11 @@ type Postmark interface {
 
 	// Email sends a single email with custom content.
 	// http://developer.postmarkapp.com/developer-api-email.html#send-email
-	Email(ctx context.Context, email *Email) error
+	Email(ctx context.Context, email *Email) (*EmailResponse, error)
 
 	// EmailWithTemplate sends an email with templated content.
 	// http://developer.postmarkapp.com/developer-api-templates.html#email-with-template
-	EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) error
+	EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error)
 }
 
 type postmark struct {
@@ -180,7 +180,7 @@ type Email struct {
 	TextBody string
 }
 
-func (p *postmark) Email(ctx context.Context, email *Email) error {
+func (p *postmark) Email(ctx context.Context, email *Email) (*EmailResponse, error) {
 	er := new(EmailResponse)
 	_, err := p.Exec(ctx, &Request{
 		Method:  "POST",
@@ -189,9 +189,9 @@ func (p *postmark) Email(ctx context.Context, email *Email) error {
 		Target:  er,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return er, nil
 }
 
 // EmailWithTemplate defines a templated email to the postmark API
@@ -203,7 +203,7 @@ type EmailWithTemplate struct {
 	InlineCSS     bool `json:"InlineCss,omitempty"`
 }
 
-func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) error {
+func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error) {
 	er := new(EmailResponse)
 	_, err := p.Exec(ctx, &Request{
 		Method:  "POST",
@@ -212,7 +212,7 @@ func (p *postmark) EmailWithTemplate(ctx context.Context, email *EmailWithTempla
 		Target:  er,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return er, nil
 }
