@@ -1,8 +1,10 @@
 package postmark
 
 import (
-	"golang.org/x/net/context"
+	"path"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 // Emails defines the functionality of the emails resource
@@ -71,7 +73,7 @@ func (e *emails) Email(ctx context.Context, email *Email) (*EmailResponse, error
 	er := new(EmailResponse)
 	_, err := e.pm.Exec(ctx, &Request{
 		Method:  "POST",
-		Path:    "/email",
+		Path:    "email",
 		Payload: email,
 		Target:  er,
 	})
@@ -94,7 +96,7 @@ func (e *emails) EmailWithTemplate(ctx context.Context, email *EmailWithTemplate
 	er := new(EmailResponse)
 	_, err := e.pm.Exec(ctx, &Request{
 		Method:  "POST",
-		Path:    "/email/withTemplate/",
+		Path:    path.Join("email", "withTemplate"),
 		Payload: email,
 		Target:  er,
 	})

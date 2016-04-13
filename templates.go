@@ -1,10 +1,11 @@
 package postmark
 
 import (
-	"golang.org/x/net/context"
 	"net/url"
 	"path"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 // Templates defines the functionality of the template resource
@@ -60,7 +61,7 @@ func (t *templates) Get(ctx context.Context, id string) (*Template, error) {
 	tmpl := new(Template)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "GET",
-		Path:   path.Join("/templates/", id),
+		Path:   path.Join("templates", id),
 		Target: tmpl,
 	})
 	if err != nil {
@@ -83,7 +84,7 @@ func (t *templates) Create(ctx context.Context, tmpl *Template) (*TemplateResp, 
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method:  "POST",
-		Path:    "/templates/",
+		Path:    "templates",
 		Payload: tmpl,
 		Target:  tmplResp,
 	})
@@ -97,7 +98,7 @@ func (t *templates) Edit(ctx context.Context, id string, tmpl *Template) (*Templ
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method:  "PUT",
-		Path:    path.Join("/templates", id),
+		Path:    path.Join("templates", id),
 		Payload: tmpl,
 		Target:  tmplResp,
 	})
@@ -115,7 +116,7 @@ type TemplateList struct {
 
 func (t *templates) List(ctx context.Context, count, offset int) (*TemplateList, error) {
 	urlBuilder := url.URL{
-		Path: "/templates",
+		Path: "templates",
 		RawQuery: url.Values{
 			"count":  {strconv.Itoa(count)},
 			"offset": {strconv.Itoa(offset)},
@@ -138,7 +139,7 @@ func (t *templates) Delete(ctx context.Context, id string) (*TemplateResp, error
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "DELETE",
-		Path:   path.Join("/templates", id),
+		Path:   path.Join("templates", id),
 		Target: tmplResp,
 	})
 	if err != nil {
@@ -176,7 +177,7 @@ func (t *templates) Validate(ctx context.Context, tmpl *TemplateValidation) (*Te
 	tmplResp := new(TemplateValidationResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method:  "POST",
-		Path:    "/templates/validate",
+		Path:    path.Join("templates", "validate"),
 		Payload: tmpl,
 		Target:  tmplResp,
 	})

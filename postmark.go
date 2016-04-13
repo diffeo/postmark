@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"io"
 	"net/http"
 	"path"
+
+	"golang.org/x/net/context"
 )
 
 const (
