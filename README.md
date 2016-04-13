@@ -1,6 +1,8 @@
 # Postmark API
 
 [![Godoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://godoc.org/github.com/rastech/postmark)
+[![License](https://img.shields.io/badge/license-Apache%202.0-red.svg?style=flat-squared)](https://github.com/rastech/postmark/blob/master/LICENSE)
+
 
 A Go client library for the [Postmark API](http://developer.postmarkapp.com). This is currently a partial implementation based on internal needs for Meta, existing functionality can be added as necessary.
 
