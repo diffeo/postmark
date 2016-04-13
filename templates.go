@@ -12,7 +12,7 @@ import (
 type Templates interface {
 	// Get retrieves an individual template
 	// http://developer.postmarkapp.com/developer-api-templates.html#get-template
-	Get(ctx context.Context, id string) (*Template, error)
+	Get(ctx context.Context, id int64) (*Template, error)
 
 	// Create creates a new template within Postmark
 	// http://developer.postmarkapp.com/developer-api-templates.html#create-template
@@ -20,7 +20,7 @@ type Templates interface {
 
 	// Edit modifies an existing template
 	// http://developer.postmarkapp.com/developer-api-templates.html#edit-template
-	Edit(ctx context.Context, id string, tmpl *Template) (*TemplateResp, error)
+	Edit(ctx context.Context, id int64, tmpl *Template) (*TemplateResp, error)
 
 	// List returns a list of all existing templates
 	// http://developer.postmarkapp.com/developer-api-templates.html#template-list
@@ -28,7 +28,7 @@ type Templates interface {
 
 	// Delete permanently deletes a template from Postmark
 	// http://developer.postmarkapp.com/developer-api-templates.html#delete-template
-	Delete(ctx context.Context, id string) (*TemplateResp, error)
+	Delete(ctx context.Context, id int64) (*TemplateResp, error)
 
 	// Validate allows a template's validity to be checked without sending the template
 	// http://developer.postmarkapp.com/developer-api-templates.html#validate-template
@@ -57,11 +57,11 @@ type Template struct {
 	Active             bool
 }
 
-func (t *templates) Get(ctx context.Context, id string) (*Template, error) {
+func (t *templates) Get(ctx context.Context, id int64) (*Template, error) {
 	tmpl := new(Template)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "GET",
-		Path:   path.Join("templates", id),
+		Path:   path.Join("templates", i64toa(id)),
 		Target: tmpl,
 	})
 	if err != nil {
@@ -94,11 +94,11 @@ func (t *templates) Create(ctx context.Context, tmpl *Template) (*TemplateResp, 
 	return tmplResp, nil
 }
 
-func (t *templates) Edit(ctx context.Context, id string, tmpl *Template) (*TemplateResp, error) {
+func (t *templates) Edit(ctx context.Context, id int64, tmpl *Template) (*TemplateResp, error) {
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method:  "PUT",
-		Path:    path.Join("templates", id),
+		Path:    path.Join("templates", i64toa(id)),
 		Payload: tmpl,
 		Target:  tmplResp,
 	})
@@ -135,11 +135,11 @@ func (t *templates) List(ctx context.Context, count, offset int) (*TemplateList,
 	return tmplList, nil
 }
 
-func (t *templates) Delete(ctx context.Context, id string) (*TemplateResp, error) {
+func (t *templates) Delete(ctx context.Context, id int64) (*TemplateResp, error) {
 	tmplResp := new(TemplateResp)
 	_, err := t.pm.Exec(ctx, &Request{
 		Method: "DELETE",
-		Path:   path.Join("templates", id),
+		Path:   path.Join("templates", i64toa(id)),
 		Target: tmplResp,
 	})
 	if err != nil {
@@ -189,4 +189,11 @@ func (t *templates) Validate(ctx context.Context, tmpl *TemplateValidation) (*Te
 
 func (t *templates) Email(ctx context.Context, email *EmailWithTemplate) (*EmailResponse, error) {
 	return t.pm.Emails().EmailWithTemplate(ctx, email)
+}
+
+// helpers
+
+// cleans up syntax for putting ids into URLs
+func i64toa(i int64) string {
+	return strconv.FormatInt(i, 10)
 }
