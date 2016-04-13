@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"time"
 )
@@ -19,6 +20,9 @@ const (
 // Postmark defines methods to interace with the Postmark API
 type Postmark interface {
 	SetClient(client *http.Client) Postmark
+
+	// Templates returns a resource root object handling template interactions with Postmark
+	Templates() Templates
 
 	// Email sends a single email with custom content.
 	// http://developer.postmarkapp.com/developer-api-email.html#send-email
@@ -55,12 +59,17 @@ func New(serverToken, accountToken string) Postmark {
 }
 
 func (p *postmark) Exec(ctx context.Context, req *Request) (*http.Response, error) {
-	data, err := json.Marshal(req.Payload)
-	if err != nil {
-		return nil, err
+	var payload io.Reader
+	if req.Payload != nil {
+		data, err := json.Marshal(req.Payload)
+		if err != nil {
+			return nil, err
+		}
+
+		payload = bytes.NewReader(data)
 	}
 
-	r, err := http.NewRequest(req.Method, pmRootEndpoint+req.Path, bytes.NewReader(data))
+	r, err := http.NewRequest(req.Method, pmRootEndpoint+req.Path, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +120,10 @@ func (p *postmark) httpclient() *http.Client {
 func (p *postmark) SetClient(client *http.Client) Postmark {
 	p.client = client
 	return p
+}
+
+func (p *postmark) Templates() Templates {
+	return &templates{pm: p}
 }
 
 // Error defines an error from the Postmark API
