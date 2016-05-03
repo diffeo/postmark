@@ -16,7 +16,7 @@ type (
 	// Parents are used for more realistic validation/tests on postmark servers (using POSTMARK_API_TEST).
 	mock          struct{ parent Postmark }
 	mockEmails    struct{ parent *mock }
-	mockTemplates struct{ parent *mock }
+	mockTemplates struct{}
 
 	templateInfo struct {
 		*Template
@@ -28,68 +28,11 @@ var (
 	// Mock is a mock Postmark client.
 	Mock = &mock{New("POSTMARK_API_TEST", "")}
 	eml  = &mockEmails{parent: Mock}
-	tmpl = &mockTemplates{parent: Mock}
+	tmpl = &mockTemplates{}
 
 	tmplCt int64 = 5
 
 	tmplInfo = map[int64]templateInfo{
-		1: {
-			Template: &Template{
-				TemplateID: 1,
-				Name:       "Template 1",
-				Subject:    "Subject 1",
-				HTMLBody:   "",
-				TextBody:   "",
-				Active:     true,
-			},
-			Keys: []string{"val1", "val2", "val3"},
-		},
-		2: {
-			Template: &Template{
-				TemplateID: 2,
-				Name:       "Template 2",
-				Subject:    "Subject 2",
-				HTMLBody:   "TEST BODY",
-				TextBody:   "TEST TEXT BODY",
-				Active:     false,
-			},
-			Keys: []string{"val2", "val5", "val4"},
-		},
-		3: {
-			Template: &Template{
-				TemplateID: 3,
-				Name:       "Template 3",
-				Subject:    "Subject 3",
-				HTMLBody:   "ANOTHER TEST BODY",
-				TextBody:   "ANOTHER TEST TEXT BODY",
-				Active:     true,
-			},
-			Keys: []string{"val6", "val9", "val12"},
-		},
-		4: {
-			Template: &Template{
-				TemplateID: 4,
-				Name:       "Template 4",
-				Subject:    "Subject 4",
-				HTMLBody:   "some random text",
-				TextBody:   "qwweqwweqweqwe",
-				Active:     false,
-			},
-			Keys: []string{"val11", "val12", "val13"},
-		},
-		5: {
-			Template: &Template{
-				TemplateID: 5,
-				Name:       "Template 5",
-				Subject:    "Subject 5",
-				HTMLBody:   "",
-				TextBody:   "",
-				Active:     true,
-			},
-			Keys: []string{"val2", "val1", "val3"},
-		},
-	}
-	defaultTmpls = map[int]templateInfo{
 		1: {
 			Template: &Template{
 				TemplateID: 1,
@@ -249,13 +192,8 @@ func (m *mockTemplates) Get(_ context.Context, id int64) (*Template, error) {
 
 func (m *mockTemplates) Create(ctx context.Context, tmpl *Template) (*TemplateResp, error) {
 	tmplCt++
-	tmpl.TemplateID = tmplCt
-	tmplInfo[tmplCt] = templateInfo{
-		Template: tmpl,
-	}
-
 	return &TemplateResp{
-		TemplateID: tmpl.TemplateID,
+		TemplateID: tmplCt,
 		Name:       tmpl.Name,
 		Active:     tmpl.Active,
 		Message:    "OK",
@@ -269,7 +207,6 @@ func (m *mockTemplates) Edit(_ context.Context, id int64, tmpl *Template) (*Temp
 			Message:   ErrorLookup[1101],
 		}
 	}
-	tmplInfo[tmpl.TemplateID].Template = tmpl
 	return &TemplateResp{
 		TemplateID: tmpl.TemplateID,
 		Name:       tmpl.Name,
@@ -280,20 +217,16 @@ func (m *mockTemplates) Edit(_ context.Context, id int64, tmpl *Template) (*Temp
 
 func (m *mockTemplates) List(_ context.Context, count, offset int) (*TemplateList, error) {
 	t := &TemplateList{}
-	ct := 0
+	ct := int64(0)
 
-	if offset > tmplCt {
-		return t, nil
-	}
-
-	for i := offset + 1; ct < count && i < 1000; i++ {
+	for i := int64(offset + 1); ct < int64(count) && i < 1000; i++ {
 		tmpl, ok := tmplInfo[i]
 		if !ok {
 			continue
 		}
 
 		ct++
-		t.Templates = append(t.Templates, tmpl)
+		t.Templates = append(t.Templates, tmpl.Template)
 	}
 
 	t.TemplateCount = ct
@@ -312,7 +245,9 @@ func (m *mockTemplates) Delete(_ context.Context, id int64) (*TemplateResp, erro
 func (m *mockTemplates) Validate(_ context.Context, tmpl *TemplateValidation) (*TemplateValidationResp, error) {
 	return &TemplateValidationResp{
 		ValidationErrors: []TemplateValidationErr{
-			Message: "Template validation is not supported in postmark.Mock.",
+			{
+				Message: "Template validation is not supported in postmark.Mock.",
+			},
 		},
 	}, errors.New("Template validation not supported in postmark.Mock.")
 }

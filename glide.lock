@@ -1,8 +1,8 @@
-hash: 4fa82719653d0b6544345605dfcd0460f9f5fcad0d647a0ad4f2dbac4033dda0
-updated: 2016-05-03T13:21:09.348126002-04:00
+hash: 82bd18877965de957e75229f187213d73a26367ffeea9d27dd9a94084cb82670
+updated: 2016-05-03T14:26:15.266587556-04:00
 imports:
-- name: github.com/satori/go.uuid
-  version: f9ab0dce87d815821e221626b772e3475a0d2749
+- name: github.com/nu7hatch/gouuid
+  version: 179d4d0c4d8d407a32af483c2354df1d2c91e6c3
 - name: golang.org/x/net
   version: 35ec611a141ee705590b9eb64d673f9e6dfeb1ac
   subpackages:
