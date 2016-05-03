@@ -25,7 +25,8 @@ type (
 )
 
 var (
-	// Mock is a mock Postmark client.
+	// Mock is a mock Postmark client. Note that operations on the mock object (e.g. deleting, editing, or creating
+	// templates) do NOT persist--a successful create does not actually add a template to the mock.
 	Mock = &mock{New("POSTMARK_API_TEST", "")}
 	eml  = &mockEmails{parent: Mock}
 	tmpl = &mockTemplates{}
@@ -107,13 +108,6 @@ func (m *mock) Templates() Templates {
 func (m *mock) SetClient(client *http.Client) Postmark {
 	m.parent = m.parent.SetClient(client)
 	return m
-}
-
-func (m *mock) Reset() {
-	tmplInfo = map[int64]templateInfo{}
-	for k, v := range defaultTmpls {
-		tmplInfo[int64(k)] = v
-	}
 }
 
 func (m *mockEmails) real() Emails {
@@ -235,8 +229,6 @@ func (m *mockTemplates) List(_ context.Context, count, offset int) (*TemplateLis
 }
 
 func (m *mockTemplates) Delete(_ context.Context, id int64) (*TemplateResp, error) {
-	delete(tmplInfo, id)
-
 	return &TemplateResp{
 		Message: fmt.Sprintf("Template %v removed", id),
 	}, nil
