@@ -156,10 +156,18 @@ type TemplateValidation struct {
 // TemplateValidationResp defines the result of a template validation call
 type TemplateValidationResp struct {
 	AllContentIsValid      bool
-	ContentIsValid         bool
-	ValidationErrors       []TemplateValidationErr
-	RenderedContent        string
+	HTMLBody               TemplateValidationResult `json:"HtmlBody"`
+	TextBody               TemplateValidationResult
+	Subject                TemplateValidationResult
 	SuggestedTemplateModel map[string]interface{}
+}
+
+// TemplateValidationResult contains information describing the result of a validation for
+// a particular type of template.
+type TemplateValidationResult struct {
+	ContentIsValid   bool
+	ValidationErrors []TemplateValidationErr
+	RenderedContent  string
 }
 
 // TemplateValidationErr defines an error that occured while validating a template
