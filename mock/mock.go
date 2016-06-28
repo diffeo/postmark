@@ -236,12 +236,15 @@ func (m *mockTemplates) Delete(_ context.Context, id int64) (*TemplateResp, erro
 }
 
 func (m *mockTemplates) Validate(_ context.Context, tmpl *TemplateValidation) (*TemplateValidationResp, error) {
-	return &TemplateValidationResp{
-		ValidationErrors: []TemplateValidationErr{
-			{
-				Message: "Template validation is not supported in postmark.Mock.",
-			},
+	errResult := TemplateValidationResult{ValidationErrors: []TemplateValidationErr{
+		{
+			Message: "Template validation is not supported in postmark.Mock.",
 		},
+	}}
+	return &TemplateValidationResp{
+		HTMLBody: errResult,
+		TextBody: errResult,
+		Subject:  errResult,
 	}, errors.New("Template validation not supported in postmark.Mock.")
 }
 
