@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -177,4 +178,27 @@ func (e *Error) Error() string {
 		codeMeaning = meaning
 	}
 	return fmt.Sprintf("postmark error %d %s: %s", e.ErrorCode, e.Message, codeMeaning)
+}
+
+// Time wraps time.Time with more flexible parsing. It has only been necessary in a few cases,
+// using the stdlib's time.Time is preferred if possible.
+type Time time.Time
+
+const (
+	rfc3339NoTz = "2006-01-02T15:04:05"
+)
+
+// UnmarshalJSON implements more flexible parsing of timestamps for the Time type
+func (t *Time) UnmarshalJSON(data []byte) error {
+	if err := (*time.Time)(t).UnmarshalJSON(data); err == nil {
+		// if the default parsing works then we have nothing to do
+		return nil
+	}
+
+	stdtime, err := time.Parse(`"`+rfc3339NoTz+`"`, string(data))
+	if err != nil {
+		return err
+	}
+	*t = (Time)(stdtime)
+	return nil
 }

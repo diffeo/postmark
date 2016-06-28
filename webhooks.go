@@ -86,7 +86,7 @@ type OpenWebhook struct {
 	ReadSeconds float64
 	Geo         OpenGeolocation
 	MessageID   string
-	ReceivedAt  time.Time
+	ReceivedAt  Time
 	Tag         string
 	Recipient   string
 }
