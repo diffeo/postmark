@@ -1,5 +1,6 @@
 # Postmark API
 
+[![CircleCI](https://circleci.com/gh/rastech/postmark.svg?style=svg)](https://circleci.com/gh/rastech/postmark)
 [![Godoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://godoc.org/github.com/rastech/postmark)
 [![License](https://img.shields.io/badge/license-Apache%202.0-red.svg?style=flat-squared)](https://github.com/rastech/postmark/blob/master/LICENSE)
 
