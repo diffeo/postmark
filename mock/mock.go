@@ -7,10 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nu7hatch/gouuid"
-	. "github.com/rastech/postmark" // dot imports aren't recommended, but this package shouldn't be used except for testing anyway
-
 	"golang.org/x/net/context"
+
+	"github.com/nu7hatch/gouuid"
+
+	// dot imports aren't recommended, but this package shouldn't be used except for testing anyway
+	. "github.com/diffeo/postmark"
 )
 
 type (

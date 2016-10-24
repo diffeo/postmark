@@ -1,4 +1,4 @@
-package: github.com/rastech/postmark
+package: github.com/diffeo/postmark
 import:
 - package: golang.org/x/net
   subpackages:
