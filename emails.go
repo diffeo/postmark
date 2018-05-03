@@ -24,17 +24,29 @@ type emails struct {
 
 var _ Emails = (*emails)(nil)
 
+// LinkTrackType defines types of tracked links.
+type LinkTrackType string
+
+// LinkTrackType constant definitions.
+const (
+	LinkTrackTypeNone        LinkTrackType = "None"
+	LinkTrackTypeHTMLAndText LinkTrackType = "HtmlAndText"
+	LinkTrackTypeHTMLOnly    LinkTrackType = "HtmlOnly"
+	LinkTrackTypeTextOnly    LinkTrackType = "TextOnly"
+)
+
 // BaseEmail defines the fields common to all Postmark emails
 type BaseEmail struct {
-	From        string       `json:",omitempty"`
-	To          string       `json:",omitempty"`
-	Cc          string       `json:",omitempty"`
-	Bcc         string       `json:",omitempty"`
-	Tag         string       `json:",omitempty"`
-	ReplyTo     string       `json:",omitempty"`
-	Headers     []Header     `json:",omitempty"`
-	TrackOpens  bool         `json:",omitempty"`
-	Attachments []Attachment `json:",omitempty"`
+	From        string        `json:",omitempty"`
+	To          string        `json:",omitempty"`
+	Cc          string        `json:",omitempty"`
+	Bcc         string        `json:",omitempty"`
+	Tag         string        `json:",omitempty"`
+	ReplyTo     string        `json:",omitempty"`
+	Headers     []Header      `json:",omitempty"`
+	TrackOpens  bool          `json:",omitempty"`
+	TrackLinks  LinkTrackType `json:",omitempty"`
+	Attachments []Attachment  `json:",omitempty"`
 }
 
 // Header defines an email header within the Postmark API
