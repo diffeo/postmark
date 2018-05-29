@@ -44,7 +44,7 @@ type BaseEmail struct {
 	Tag         string        `json:",omitempty"`
 	ReplyTo     string        `json:",omitempty"`
 	Headers     []Header      `json:",omitempty"`
-	TrackOpens  bool          `json:",omitempty"`
+	TrackOpens  *bool         `json:",omitempty"`
 	TrackLinks  LinkTrackType `json:",omitempty"`
 	Attachments []Attachment  `json:",omitempty"`
 }
